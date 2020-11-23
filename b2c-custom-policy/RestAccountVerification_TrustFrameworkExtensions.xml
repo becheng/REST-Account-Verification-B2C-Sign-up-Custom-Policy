@@ -1,0 +1,376 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<TrustFrameworkPolicy 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+  xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" 
+  PolicySchemaVersion="0.3.0.0" 
+  TenantId="wabbit1317b2c.onmicrosoft.com" 
+  PolicyId="B2C_1A_RestAccountVerification_TrustFrameworkExtensions" 
+  PublicPolicyUri="http://wabbit1317b2c.onmicrosoft.com/B2C_1A_RestAccountVerification_TrustFrameworkExtensions">
+  
+  <BasePolicy>
+    <TenantId>wabbit1317b2c.onmicrosoft.com</TenantId>
+    <PolicyId>B2C_1A_TrustFrameworkBase</PolicyId>
+  </BasePolicy>
+
+  <BuildingBlocks>
+    <ClaimsSchema>
+    
+      <!--1. Add new claims to capture the custom user inputs on the UI -->
+      <!-- the https status input, i.e. 200, 404 -->
+      <ClaimType Id="httpStatusCode">
+        <DisplayName>Http status code</DisplayName>
+        <DataType>string</DataType>
+        <UserHelpText>Enter a http status code</UserHelpText>
+        <UserInputType>TextBox</UserInputType>
+      </ClaimType>
+
+      <!-- user checkbox selections, i.e. recieve updates, consent, etc -->
+      <ClaimType Id="userPrefs">
+        <DisplayName>User Terms and Conditions</DisplayName>
+        <DataType>string</DataType>
+        <UserInputType>CheckboxMultiSelect</UserInputType>
+        <Restriction>
+          <Enumeration Text="A" Value="A" SelectByDefault="false" />
+          <Enumeration Text="B " Value="B" SelectByDefault="false" />
+          <Enumeration Text="C" Value="C" SelectByDefault="false" />
+        </Restriction>
+      </ClaimType>
+      
+      <!--5a. Claim that specifies whether user must reset the password-->
+      <ClaimType Id="extension_mustResetPassword">
+        <DisplayName>Must reset password</DisplayName>
+        <DataType>boolean</DataType>
+        <UserHelpText>Specifies whether user must reset the password</UserHelpText>
+      </ClaimType>
+
+      <!--5a. Claim that captures that its the user's first login -->
+      <ClaimType Id="extension_isFirstLogin">
+        <DisplayName>Is first login</DisplayName>
+        <DataType>boolean</DataType>
+        <UserHelpText>Indicates its the user's first login (via signup)</UserHelpText>
+      </ClaimType>
+      
+      <!--6a. Oath2 Bearer claim to access a secured api -->
+      <ClaimType Id="bearerToken">
+        <DisplayName>Bearer token</DisplayName>
+        <DataType>string</DataType>
+      </ClaimType>
+            
+    </ClaimsSchema>
+
+    <!-- Optional: Oa. set the Display with the new user's email instead of defaulting to 'None' -->
+    <ClaimsTransformations>
+      <ClaimsTransformation Id="CreateDisplayNameFromEmail" TransformationMethod="FormatStringClaim">
+        <InputClaims>
+          <InputClaim ClaimTypeReferenceId="email" TransformationClaimType="inputClaim" />
+        </InputClaims>
+        <InputParameters>
+          <InputParameter Id="stringFormat" DataType="string" Value="{0}" />
+        </InputParameters>
+        <OutputClaims>
+          <OutputClaim ClaimTypeReferenceId="displayName" TransformationClaimType="outputClaim" />
+        </OutputClaims>
+      </ClaimsTransformation>
+    </ClaimsTransformations>
+
+  </BuildingBlocks>
+
+  <ClaimsProviders>
+
+    <ClaimsProvider>
+      <DisplayName>Local Account SignIn</DisplayName>
+      <TechnicalProfiles>
+        
+        <!--Prerequiste: Existing login-NonInteractive TechnicalProfile based on the starter pack -->
+        <TechnicalProfile Id="login-NonInteractive">
+          <Metadata>
+            <Item Key="client_id">78b5ef62-91dc-45f0-8b89-fc0e0e063ec1</Item>
+            <Item Key="IdTokenAudience">2470d8b2-4d33-4e4e-8376-80502b3993c0</Item>
+          </Metadata>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="client_id" DefaultValue="78b5ef62-91dc-45f0-8b89-fc0e0e063ec1" />
+            <InputClaim ClaimTypeReferenceId="resource_id" PartnerClaimType="resource" DefaultValue="2470d8b2-4d33-4e4e-8376-80502b3993c0" />
+          </InputClaims>
+        </TechnicalProfile>
+
+        <!-- 2. Override the LocalAccountSignUpWithLogonEmail techProfile, i.e. the Sign Up page  -->
+        <TechnicalProfile Id="LocalAccountSignUpWithLogonEmail">
+          <Metadata>
+            <!-- a. Disable email verification, i.e 'Send Verification Code'  -->
+            <Item Key="EnforceEmailVerification">false</Item>
+          </Metadata>          
+          <InputClaims>
+            <!-- b. Set the input claims that require a default value 
+            Important: set the newPassword claim with a temporary passowrd that the 
+            satisfies the b2c password policy, i.e. lowercase, uppercase and a number-->
+            <InputClaim ClaimTypeReferenceId="newPassword" DefaultValue="tempPassword1" />
+            <InputClaim ClaimTypeReferenceId="httpStatusCode" DefaultValue="200" />
+          </InputClaims>
+          <DisplayClaims>
+            <!-- c. Set the display claims to show only the desired fields on the UI.
+            Here we hide the newPassword and reenterPassword fields since we are setting a new user with temp password  -->
+            <DisplayClaim ClaimTypeReferenceId="email" />
+            <DisplayClaim ClaimTypeReferenceId="httpStatusCode" /> 
+            <DisplayClaim ClaimTypeReferenceId="userPrefs" /> 
+          </DisplayClaims>          
+          <OutputClaims>
+            <!-- d. copy all the output claims from the base and add the new fields in the preferred order -->
+            <OutputClaim ClaimTypeReferenceId="objectId" />
+            <OutputClaim ClaimTypeReferenceId="email" PartnerClaimType="Verified.Email" Required="true" />
+            <OutputClaim ClaimTypeReferenceId="newPassword" Required="true" /> 
+            <!-- <OutputClaim ClaimTypeReferenceId="reenterPassword" Required="true" /> -->
+            <OutputClaim ClaimTypeReferenceId="executed-SelfAsserted-Input" DefaultValue="true" />
+            <OutputClaim ClaimTypeReferenceId="authenticationSource" />
+            <OutputClaim ClaimTypeReferenceId="newUser" />
+            <OutputClaim ClaimTypeReferenceId="httpStatusCode" Required="true"/> <!-- new claim -->
+            <OutputClaim ClaimTypeReferenceId="userPrefs" Required="true"/> <!-- new claim -->
+          </OutputClaims>
+          <ValidationTechnicalProfiles>
+            <!-- e. copy the ValidationTechnicalProfiles from base and add new validationTechnicalProfile before 
+              the AAD-UserWriteUsingLogonEmail tech profile so the account creation is dependent on the new tech profile-->
+            
+            <ValidationTechnicalProfile ReferenceId="SecureREST-AccessToken"/><!-- aquire an access_token to be set the bearer claim--> 
+            <ValidationTechnicalProfile ReferenceId="httpstatus-api" /> 
+            <!-- <ValidationTechnicalProfile ReferenceId="AAD-UserWriteUsingLogonEmail" /> 
+              NOT sure why this must be commented out, but it's still being fired form the base 
+              AND the order in which the VTP executes is still firing in the desired order.  
+              If we don't comment this out, we get an odd error message saying the 'specified user already exists...and to chose another one' even though the 
+              account is still created successfully  -->
+          </ValidationTechnicalProfiles>
+        </TechnicalProfile>
+
+        <!-- 3. Add new TechnicalProfile to be used for validation -->
+        <TechnicalProfile Id="httpstatus-api">
+          <DisplayName>Return a http status code using an external rest api</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.RestfulProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <Metadata>
+            <!-- for local testing -->
+            <!-- <Item Key="ServiceUrl">https://bf0238f15a30.ngrok.io/api/generateHttpStatusApi</Item> -->
+            <!-- <Item Key="AuthenticationType">None</Item> -->
+            <!-- <Item Key="AllowInsecureAuthInProduction">true</Item> -->
+            
+            <!--6d. Update Item Keys to use a protected api with bearer token to get access -->
+            <Item Key="ServiceUrl">https://b2c-returnhttpstatuscode-api.azurewebsites.net/api/generateHttpStatusApi</Item>
+            <Item Key="AuthenticationType">Bearer</Item>
+            <Item Key="UseClaimAsBearerToken">bearerToken</Item>
+            <Item Key="AllowInsecureAuthInProduction">false</Item>
+
+            <Item Key="SendClaimsIn">Body</Item> <!-- incoming format -->
+            <Item Key="ClaimsFormat">Body</Item> <!-- returning format -->
+          </Metadata>
+          <InputClaims>
+            <!-- a. Add the input claims that will be sent to the rest api -->
+            <InputClaim ClaimTypeReferenceId="email" PartnerClaimType="emailAddress"/><!--example of mapping email claim in policy to emailaddress property in api request  json  -->
+            <InputClaim ClaimTypeReferenceId="httpStatusCode" />
+            <InputClaim ClaimTypeReferenceId="userPrefs" />
+            <!--6d. Added bearer access token to access the protected api  -->
+            <InputClaim ClaimTypeReferenceId="bearerToken"/>
+          </InputClaims>
+        </TechnicalProfile>
+
+
+        <!-- **************************************************************************** -->
+        <!-- 5b. The following TPs are used to support a Forced Password Reset on first Login -->
+        <TechnicalProfile Id="AAD-Common">
+          <DisplayName>Azure Active Directory</DisplayName>
+          <!--  Provide objectId and appId before using extension properties.
+                For more information: https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-create-custom-attributes-profile-edit-custom 
+          -->
+          <Metadata>
+            <Item Key="ApplicationObjectId">8cdda2ff-bf30-43d0-9c84-3b2a88f81262</Item>
+            <Item Key="ClientId">0a5c4ee3-a5c3-4053-873e-d1fa79e324ab</Item>
+          </Metadata>
+        </TechnicalProfile>
+
+        <!--Override TP to include the 'must reset password' and 'is first login' extension 
+          attributes when retreving a user's profile  -->
+        <TechnicalProfile Id="AAD-UserReadUsingObjectId">
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="extension_mustResetPassword" />
+            <OutputClaim ClaimTypeReferenceId="extension_isFirstLogin" />
+          </OutputClaims>
+        </TechnicalProfile>
+
+        <!--Override TP to include following claim transformations and persistance -->
+        <TechnicalProfile Id="AAD-UserWriteUsingLogonEmail">
+          <InputClaimsTransformations>
+            <!-- Optional: Ob override the AAD-UserWriteUsingLogonEmail TP to include the claimsTransformation -->
+            <InputClaimsTransformation ReferenceId="CreateDisplayNameFromEmail" />
+          </InputClaimsTransformations>
+          <PersistedClaims>
+            <!-- Saves the extension_mustResetPassword defaulting true for every new local account created -->
+            <PersistedClaim ClaimTypeReferenceId="extension_mustResetPassword" DefaultValue="true" />
+            <!-- Saves the extension_isFirstLogin defaulting true for every new local account created -->
+            <PersistedClaim ClaimTypeReferenceId="extension_isFirstLogin" DefaultValue="true" />
+          </PersistedClaims>
+        </TechnicalProfile>
+
+        <!--TP to remove the extension_mustResetPassword (will be called when the user has reset their password)-->
+        <TechnicalProfile Id="AAD-UserRemoveMustResetPasswordUsingObjectId">
+          <Metadata>
+            <Item Key="Operation">DeleteClaims</Item>
+          </Metadata>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="objectId" Required="true" />
+          </InputClaims>
+          <PersistedClaims>
+            <PersistedClaim ClaimTypeReferenceId="objectId" />
+            <PersistedClaim ClaimTypeReferenceId="extension_mustResetPassword" />            
+          </PersistedClaims>
+          <IncludeTechnicalProfile ReferenceId="AAD-Common" />
+        </TechnicalProfile>
+
+        <!--TP to remove the extension_isFirstLogin (will be called after the user's first login and after the mustResetPassword checks)-->
+        <TechnicalProfile Id="AAD-UserRemoveIsFirstLoginUsingObjectId">
+          <Metadata>
+            <Item Key="Operation">DeleteClaims</Item>
+          </Metadata>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="objectId" Required="true" />
+          </InputClaims>
+          <PersistedClaims>
+            <PersistedClaim ClaimTypeReferenceId="objectId" />
+            <PersistedClaim ClaimTypeReferenceId="extension_isFirstLogin" />            
+          </PersistedClaims>
+          <IncludeTechnicalProfile ReferenceId="AAD-Common" />
+        </TechnicalProfile>
+        <!-- **************************************************************************** -->
+
+        <!--6b. TP to acquire oauth access_token -->
+        <TechnicalProfile Id="SecureREST-AccessToken">
+          <DisplayName>SecureRest-AccessToken</DisplayName>
+          <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.RestfulProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
+          <Metadata>
+            <!-- <Item Key="ServiceUrl">https://login.microsoftonline.com/your-tenant-name.onmicrosoft.com/oauth2/v2.0/token</Item> -->
+            <!-- Note: to support a v2.0 endpoing, change the AAD app manifest accessTokenAcceptedVersion to '2'-->
+            <Item Key="ServiceUrl">https://login.microsoftonline.com/9e54649d-2ff3-4f06-9561-d81f12cfcfa6/oauth2/v2.0/token</Item>
+            <Item Key="AuthenticationType">Basic</Item>
+             <Item Key="SendClaimsIn">Form</Item>
+          </Metadata>
+          <CryptographicKeys>
+            <!-- These keys reference the corresponding Policy Keys in the B2C identity experience framework -->
+            <Key Id="BasicAuthenticationUsername" StorageReferenceId="B2C_1A_SecureRESTClientId" />
+            <Key Id="BasicAuthenticationPassword" StorageReferenceId="B2C_1A_SecureRESTClientSecret" />
+          </CryptographicKeys>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="grant_type" DefaultValue="client_credentials" />
+            <!-- <InputClaim ClaimTypeReferenceId="scope" DefaultValue="https://secureb2cfunction.azurewebsites.net/.default" /> -->
+            <InputClaim ClaimTypeReferenceId="scope" DefaultValue="https://b2c-returnhttpstatuscode-api.azurewebsites.net/.default" />
+          </InputClaims>
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="bearerToken" PartnerClaimType="access_token" />
+          </OutputClaims>
+          <UseTechnicalProfileForSessionManagement ReferenceId="SM-Noop" />
+        </TechnicalProfile>        
+      </TechnicalProfiles>
+    </ClaimsProvider>
+  
+  </ClaimsProviders>
+
+  <!-- 5c. User journey for sign up/in with forced password reset 
+  Reminder: change the corresponding Sign up/in Replying Party/Policy to use this user Journey instead of the base-->
+  <UserJourneys>
+
+    <UserJourney Id="SignUpOrSignInWithForcePasswordReset">
+      <OrchestrationSteps>
+   
+        <OrchestrationStep Order="1" Type="CombinedSignInAndSignUp" ContentDefinitionReferenceId="api.signuporsignin">
+          <ClaimsProviderSelections>
+            <ClaimsProviderSelection ValidationClaimsExchangeId="LocalAccountSigninEmailExchange" />
+          </ClaimsProviderSelections>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="LocalAccountSigninEmailExchange" TechnicalProfileReferenceId="SelfAsserted-LocalAccountSignin-Email" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <!-- If the objectId does not exist it means a Local account needs to created via singUp TP -->
+        <OrchestrationStep Order="2" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+              <Value>objectId</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="SignUpWithLogonEmailExchange" TechnicalProfileReferenceId="LocalAccountSignUpWithLogonEmail" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <!-- This step reads any user attributes that we may not have received when in the token. 
+        Note: At this point, a user may have signed in via sign-up or signed in with an existing account
+        So we will use the extension_isFirstLogin to determine if the following TPs should invoke the force reset password -->
+        <OrchestrationStep Order="3" Type="ClaimsExchange">
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+ 
+        <!-- check if change password is required. If yes, ask the user to reset the password-->
+        <OrchestrationStep Order="4" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+              <Value>extension_mustResetPassword</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>            
+            <Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+              <Value>extension_mustResetPassword</Value>
+              <Value>True</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>            
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+              <Value>extension_isFirstLogin</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>            
+          </Preconditions>        
+          <ClaimsExchanges>
+            <ClaimsExchange Id="NewCredentials" TechnicalProfileReferenceId="LocalAccountWritePasswordUsingObjectId" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <!-- check if change password is required. If yes remove the value of the extension attribute. 
+        So, on the next time user dons' t need to update the password-->
+        <OrchestrationStep Order="5" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+              <Value>extension_mustResetPassword</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>            
+            <Precondition Type="ClaimEquals" ExecuteActionsIf="false">
+              <Value>extension_mustResetPassword</Value>
+              <Value>True</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>            
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+              <Value>extension_isFirstLogin</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>            
+          </Preconditions>        
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AADUserRemoveMustResetPasswordUsingObjectId" TechnicalProfileReferenceId="AAD-UserRemoveMustResetPasswordUsingObjectId" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <OrchestrationStep Order="6" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="false">
+              <Value>extension_isFirstLogin</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>            
+          </Preconditions>        
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AADUserRemoveIsFirstLoginUsingObjectId" TechnicalProfileReferenceId="AAD-UserRemoveIsFirstLoginUsingObjectId" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <OrchestrationStep Order="7" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
+
+      </OrchestrationSteps>
+
+      <ClientDefinition ReferenceId="DefaultWeb" />
+
+    </UserJourney>
+
+  </UserJourneys>
+
+</TrustFrameworkPolicy>

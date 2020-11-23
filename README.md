@@ -52,9 +52,19 @@
             "userPrincipalName": "AlexWu@[Your b2c domain].onmicrosoft.com",
             "extension_[Replace with the from step iii]_mustResetPassword": true
           }
-        ```  
-- [ ] 6. Protect the rest api using oauth
-- [ ] 7. Update the xml to call the api with Bearer access token.
+        ```
+  - [x] d. Copy and paste the ClaimTypes, TPs, and UserJourney from the ForceReset demo policy to your B2C policy extensions file.
+  - [x] e. Update the sign up/in replying party file to use the new user journey.
+  - [x] f. Added an additional extension_isFirstLogin to capture the first login via the signup to use it as precondition check so avoid firing the force password reset on sign up.   
+- [x] 6. Protect the rest api using oauth, i.e. deployed to an Azure with easy-auth enabled within the Function.
+  - [x] a. Deploy the function to Azure and test policy with unprotected function to Azure.
+  - [x] b. Implemented easy-auth on the function app with the B2C tenant as the issuer.  Ref: https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization
+- [x] 7. Update the xml to call the api with Bearer access token. Ref: https://docs.microsoft.com/en-us/azure/active-directory-b2c/secure-rest-api#oauth2-bearer-authentication
+  - [x] a. Created RestapiClientId and RestapiClientSecret Policy Keys in B2C using the clientId and secret of the AAD secured function app 
+  - [x] b. Add the bearer token claim to the policy
+  - [x] c. Add a new SecureRestAPI-AccessToken TP that obtains a access_token using the client credential flow.
+  - [x] d. Modified the rest api TP to use the protected api url and to access it using a bearer token. 
+  - [x] Update b2c extensions file to use Oath2 bearer auth for the rest api TP.   
 - [x] 8. Optional (Nice to haves)
   - [x] a. Added a ClaimsTransformation to the BuildBlock section to set the display to the new user's email instead of defaulting to None
   - [x] b. Copied the *AAD-UserWriteUsingLogonEmail* TP to override it with the new CreateDisplayNameFromEmail ClaimsTransformation.
