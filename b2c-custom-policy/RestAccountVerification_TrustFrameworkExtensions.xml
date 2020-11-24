@@ -4,12 +4,12 @@
   xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
   xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" 
   PolicySchemaVersion="0.3.0.0" 
-  TenantId="wabbit1317b2c.onmicrosoft.com" 
+  TenantId="yourtenant.onmicrosoft.com" 
   PolicyId="B2C_1A_RestAccountVerification_TrustFrameworkExtensions" 
-  PublicPolicyUri="http://wabbit1317b2c.onmicrosoft.com/B2C_1A_RestAccountVerification_TrustFrameworkExtensions">
+  PublicPolicyUri="http://yourtenant.onmicrosoft.com/B2C_1A_RestAccountVerification_TrustFrameworkExtensions">
   
   <BasePolicy>
-    <TenantId>wabbit1317b2c.onmicrosoft.com</TenantId>
+    <TenantId>yourtenant.onmicrosoft.com</TenantId>
     <PolicyId>B2C_1A_TrustFrameworkBase</PolicyId>
   </BasePolicy>
 
@@ -85,12 +85,12 @@
         <!--Prerequiste: Existing login-NonInteractive TechnicalProfile based on the starter pack -->
         <TechnicalProfile Id="login-NonInteractive">
           <Metadata>
-            <Item Key="client_id">78b5ef62-91dc-45f0-8b89-fc0e0e063ec1</Item>
-            <Item Key="IdTokenAudience">2470d8b2-4d33-4e4e-8376-80502b3993c0</Item>
+            <Item Key="client_id">[Replace with your ProxyIdentityExperienceFrameworkAppId]</Item>
+            <Item Key="IdTokenAudience">[Replace with your IdentityExperienceFrameworkAppId]</Item>
           </Metadata>
           <InputClaims>
-            <InputClaim ClaimTypeReferenceId="client_id" DefaultValue="78b5ef62-91dc-45f0-8b89-fc0e0e063ec1" />
-            <InputClaim ClaimTypeReferenceId="resource_id" PartnerClaimType="resource" DefaultValue="2470d8b2-4d33-4e4e-8376-80502b3993c0" />
+            <InputClaim ClaimTypeReferenceId="client_id" DefaultValue="[Replace with your ProxyIdentityExperienceFrameworkAppId]" />
+            <InputClaim ClaimTypeReferenceId="resource_id" PartnerClaimType="resource" DefaultValue="[Replace with your IdentityExperienceFrameworkAppId]" />
           </InputClaims>
         </TechnicalProfile>
 
@@ -146,12 +146,12 @@
           <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.RestfulProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
           <Metadata>
             <!-- for local testing -->
-            <!-- <Item Key="ServiceUrl">https://bf0238f15a30.ngrok.io/api/generateHttpStatusApi</Item> -->
+            <!-- <Item Key="ServiceUrl">https://[your-ngrok-instance].ngrok.io/api/generateHttpStatusApi</Item> -->
             <!-- <Item Key="AuthenticationType">None</Item> -->
             <!-- <Item Key="AllowInsecureAuthInProduction">true</Item> -->
             
             <!--6d. Update Item Keys to use a protected api with bearer token to get access -->
-            <Item Key="ServiceUrl">https://b2c-returnhttpstatuscode-api.azurewebsites.net/api/generateHttpStatusApi</Item>
+            <Item Key="ServiceUrl">https://[your-function-app].azurewebsites.net/api/generateHttpStatusApi</Item>
             <Item Key="AuthenticationType">Bearer</Item>
             <Item Key="UseClaimAsBearerToken">bearerToken</Item>
             <Item Key="AllowInsecureAuthInProduction">false</Item>
@@ -178,8 +178,8 @@
                 For more information: https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-create-custom-attributes-profile-edit-custom 
           -->
           <Metadata>
-            <Item Key="ApplicationObjectId">8cdda2ff-bf30-43d0-9c84-3b2a88f81262</Item>
-            <Item Key="ClientId">0a5c4ee3-a5c3-4053-873e-d1fa79e324ab</Item>
+            <Item Key="ApplicationObjectId">[Your Object Id of the 'b2c-extensions-app' in your b2c AAD]</Item>
+            <Item Key="ClientId">[Your ClientId/AppId of the 'b2c-extensions-app' in your b2c AAD]</Item>
           </Metadata>
         </TechnicalProfile>
 
@@ -242,9 +242,8 @@
           <DisplayName>SecureRest-AccessToken</DisplayName>
           <Protocol Name="Proprietary" Handler="Web.TPEngine.Providers.RestfulProvider, Web.TPEngine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
           <Metadata>
-            <!-- <Item Key="ServiceUrl">https://login.microsoftonline.com/your-tenant-name.onmicrosoft.com/oauth2/v2.0/token</Item> -->
             <!-- Note: to support a v2.0 endpoing, change the AAD app manifest accessTokenAcceptedVersion to '2'-->
-            <Item Key="ServiceUrl">https://login.microsoftonline.com/9e54649d-2ff3-4f06-9561-d81f12cfcfa6/oauth2/v2.0/token</Item>
+            <Item Key="ServiceUrl">https://login.microsoftonline.com/[your-AAD-tenant-Id]/oauth2/v2.0/token</Item>
             <Item Key="AuthenticationType">Basic</Item>
              <Item Key="SendClaimsIn">Form</Item>
           </Metadata>
@@ -255,8 +254,7 @@
           </CryptographicKeys>
           <InputClaims>
             <InputClaim ClaimTypeReferenceId="grant_type" DefaultValue="client_credentials" />
-            <!-- <InputClaim ClaimTypeReferenceId="scope" DefaultValue="https://secureb2cfunction.azurewebsites.net/.default" /> -->
-            <InputClaim ClaimTypeReferenceId="scope" DefaultValue="https://b2c-returnhttpstatuscode-api.azurewebsites.net/.default" />
+            <InputClaim ClaimTypeReferenceId="scope" DefaultValue="https://[your-function-app].azurewebsites.net/.default" />
           </InputClaims>
           <OutputClaims>
             <OutputClaim ClaimTypeReferenceId="bearerToken" PartnerClaimType="access_token" />
