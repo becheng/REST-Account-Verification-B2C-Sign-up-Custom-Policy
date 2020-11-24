@@ -42,13 +42,13 @@ In this sample, we cover the following:
   - [x] a. For now, set up its items in *MetaData* to call  the API locally and unprotected to make it easier to develop and test the integration with the api.
   - [x] b. Add the new *InputClaims* to be passed to the api.
   
-- [x] 4. Create the custom rest api (or modify it if already have one). 
-  - [x] a. Receive json body that contains the claims
-  - [x] b. Process the json body 
+- [x] 4. Create the custom REST api (or modify an existing one). 
+  - [x] a. Receive json body that contains the claims.
+  - [x] b. Do the processing.
   - [x] c. Return a status code 200 if success.
   - [x] d. **Important**: Return a status code 409 with a validation error message/json so the error message is surfaced on UI AND to prevent the processing of any subsequent validation technical profiles, i.e. the account creation (*AAD-UserWriteUsingLogonEmail*).
    
-- [x] 5. Set up B2C to force password reset on first login (since a temp password is assigned above)
+- [x] 5. Set up B2C to force password reset on first login (since a temp password is assigned above).
   - [x] a. Follow the instructions from https://github.com/azure-ad-b2c/samples/tree/master/policies/force-password-reset-first-logon with some tweaks in this repo.
   - [x] b. Upload the *TrustFrameworkExtensions.xml* and *SignUpOrSigin.xml* under *ForcePasswordResetOnFirstLogin* folder.  These policies have been modified to support only a Local account IDP.
   **Important**: Make sure to update the file with your b2c tenant.
@@ -78,20 +78,20 @@ In this sample, we cover the following:
             "extension_[Replace with the from step iii]_mustResetPassword": true
           }
         ```
-  - [x] d. Copy and paste the ClaimTypes, TPs, and UserJourney from the ForceReset demo policy to your B2C policy extensions file OR just copy from this policy sample.
+  - [x] d. Copy and paste the ClaimTypes, TPs, and UserJourney from the ForceReset demo policy to your B2C policy extensions file OR just copy from our policy sample.
   - [x] e. Update the SignUpOrSignIn Replying Party file to use the new user journey.
-  - [x] f. Added an additional extension_isFirstLogin to capture the first login via the sign up to use it as precondition checks in the TP so avoid firing the force password reset on sign up (see our sample in this repo).
+  - [x] f. Add an additional **extension_isFirstLogin** to capture the first login via the sign up to use it as precondition checks in the TP so avoid firing the force password reset on sign up (see our sample in this repo).
      
 - [x] 6. Protect the REST api using oauth.  
   **Note: **In this sample, we  deploy our Azure Function api to an Azure Function App with easy-auth enabled.
   - [x] a. Deploy the function to Azure and test policy with unprotected function to Azure.
-  - [x] b. Implemented easy-auth on the function app with the B2C tenant as the issuer using the oauth2 client credentials flow.  Ref: https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization
+  - [x] b. Implement easy-auth on the function app with the B2C tenant as the issuer using the oauth2 client credentials flow.  Ref: https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization
   - [x] c. If having issues, use [Postman](https://www.postman.com/) to the verify acquiring an access_token and using it as a Bearer token to access the protected api.   
 
 - [x] 7. Update your policy to call the api with a Bearer access token. Ref: https://docs.microsoft.com/en-us/azure/active-directory-b2c/secure-rest-api#oauth2-bearer-authentication
-  - [x] a. Created RestapiClientId and RestapiClientSecret Policy Keys in B2C using the clientId and secret of the Azure AD app/Service Principal used for securing the Function app. 
+  - [x] a. Created **RestapiClientId** and **RestapiClientSecret** Policy Keys in B2C using the clientId and secret of the Azure AD app/Service Principal used for securing the Function app. 
   - [x] b. Add the new bearer token *ClaimType* to the policy.
-  - [x] c. Add a new SecureRestAPI-AccessToken TP that obtains a access_token using the client credential flow (see our sample).
+  - [x] c. Add a new **SecureRestAPI-AccessToken** TP that obtains a access_token using the client credential flow (see our sample).
   - [x] d. Modify the REST api TP's *MetaData* to use the protected api url and to access it using a bearer token. 
    
 - [x] 8. Optional (Nice to haves)
