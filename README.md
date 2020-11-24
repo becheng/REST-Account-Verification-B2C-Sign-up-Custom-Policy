@@ -1,4 +1,4 @@
-# REST Account Verification B2C Sign-up Custom Policy 
+# REST Account Verification B2C Sign-up Custom Policy
 This is a high level walk-through of developing an Azure AD B2C Custom Policy that calls a RESTful api to verify a new user's account prior to creating a Local Account in your B2C tenant.
 In this sample, we cover the following:
 
